@@ -5,5 +5,5 @@
 //   - Physical phone (Expo Go): http://<your-computer-LAN-IP>:8000
 //   - Production: your deployed Hugging Face Space URL
 export const API_URL = (
-  process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000'
+  process.env.EXPO_PUBLIC_API_URL ?? 'https://seahawk-menumind-api.hf.space'
 ).replace(/\/+$/, '');
