@@ -1,0 +1,12 @@
+# MenuMind backend runtime deps (API only — no PDF parsing libs needed here).
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+
+google-genai>=1.0.0
+groq>=0.4.0
+numpy>=1.24.0
+qdrant-client>=1.7.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-dotenv>=1.0.0
+tenacity>=8.0.0

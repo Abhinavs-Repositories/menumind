@@ -147,6 +147,38 @@ class MenuRAG:
             "data": {"retrieval_count": len(docs), "time_s": round(elapsed, 2)},
         }
 
+    def list_restaurants(self) -> list[str]:
+        """Return the distinct restaurant names available in the collection."""
+        try:
+            res = self.qdrant.facet(
+                collection_name=self.collection_name,
+                key="restaurant",
+                limit=100,
+            )
+            names = [h.value for h in res.hits if h.value]
+            if names:
+                return sorted(names)
+        except Exception:
+            logger.debug("facet API unavailable, falling back to scroll")
+
+        names: set[str] = set()
+        offset = None
+        while True:
+            points, offset = self.qdrant.scroll(
+                collection_name=self.collection_name,
+                limit=256,
+                with_payload=["restaurant"],
+                with_vectors=False,
+                offset=offset,
+            )
+            for p in points:
+                r = p.payload.get("restaurant")
+                if r:
+                    names.add(r)
+            if offset is None:
+                break
+        return sorted(names)
+
     # ------------------------------------------------------------------
     # Pipeline steps
     # ------------------------------------------------------------------
