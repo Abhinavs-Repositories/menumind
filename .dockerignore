@@ -1,0 +1,18 @@
+# Keep the backend image small: only api/ + core modules are needed.
+mobile/
+venv/
+parse_output/
+menu_inputs/
+menu_parser/
+scripts/
+parser.py
+cli.py
+**/__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+.env.example
+*.md
+.vscode/
+.claude/
