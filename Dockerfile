@@ -15,9 +15,10 @@ WORKDIR /app
 COPY --chown=user api/requirements.txt ./api/requirements.txt
 RUN pip install --no-cache-dir --user -r api/requirements.txt
 
-# Copy only what the API needs at runtime (no PDF-parsing libs / mobile / data).
+# Copy what the API needs at runtime (incl. menu parsing for /ingest).
 COPY --chown=user api/ ./api/
-COPY --chown=user rag.py embedder.py ingestor.py chunker.py config.py utils.py ./
+COPY --chown=user menu_parser/ ./menu_parser/
+COPY --chown=user rag.py embedder.py ingestor.py chunker.py config.py utils.py ingest_service.py ./
 
 EXPOSE 7860
 CMD ["sh", "-c", "uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

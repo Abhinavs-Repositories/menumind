@@ -1,6 +1,7 @@
-# MenuMind backend runtime deps (API only — no PDF parsing libs needed here).
+# MenuMind backend runtime deps.
 fastapi>=0.110.0
 uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
 
 google-genai>=1.0.0
 groq>=0.4.0
@@ -10,3 +11,7 @@ pydantic>=2.0.0
 pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 tenacity>=8.0.0
+
+# Menu upload/ingest (PDF + image parsing for /ingest)
+pymupdf>=1.24.0
+pillow>=10.0.0

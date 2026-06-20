@@ -14,17 +14,20 @@ import json
 import logging
 import os
 import sys
+import threading
+import uuid
 from pathlib import Path
 from typing import Optional
 
 # Allow `import rag` etc. when launched as `api.main:app` from any cwd.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from ingest_service import ingest_menu_file
 from rag import MenuRAG
 
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +45,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Optional shared key protecting the write endpoint (set as a Space secret).
+# If unset, /ingest is open (fine for local dev).
+INGEST_API_KEY = os.getenv("INGEST_API_KEY", "")
+
+
+def require_ingest_key(provided: Optional[str]) -> None:
+    if INGEST_API_KEY and provided != INGEST_API_KEY:
+        raise HTTPException(status_code=401, detail="invalid or missing ingest key")
+
+
+# In-memory ingest job tracking (single-process; resets on restart).
+_jobs: dict[str, dict] = {}
 
 # Lazy singleton: build clients once, reuse across requests.
 _rag: Optional[MenuRAG] = None
@@ -117,3 +133,43 @@ def chat(req: ChatRequest) -> StreamingResponse:
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.post("/ingest")
+async def ingest(
+    file: UploadFile = File(...),
+    restaurant: str = Form(...),
+    x_ingest_key: Optional[str] = Header(default=None),
+) -> dict:
+    """Upload a menu (PDF/image); parse + embed + ingest it in the background."""
+    require_ingest_key(x_ingest_key)
+    if not restaurant or not restaurant.strip():
+        raise HTTPException(status_code=400, detail="restaurant is required")
+
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="empty file")
+
+    job_id = uuid.uuid4().hex
+    name = restaurant.strip()
+    _jobs[job_id] = {"status": "processing", "restaurant": name}
+    filename = file.filename or "menu.pdf"
+
+    def run() -> None:
+        try:
+            result = ingest_menu_file(data, filename, name)
+            _jobs[job_id] = {"status": "done", **result}
+        except Exception as exc:  # noqa: BLE001 - surface message to client
+            logger.exception("ingest job failed")
+            _jobs[job_id] = {"status": "error", "restaurant": name, "error": str(exc)}
+
+    threading.Thread(target=run, daemon=True).start()
+    return {"job_id": job_id, "status": "processing", "restaurant": name}
+
+
+@app.get("/ingest/{job_id}")
+def ingest_status(job_id: str) -> dict:
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="unknown job id")
+    return job

@@ -3,7 +3,6 @@ mobile/
 venv/
 parse_output/
 menu_inputs/
-menu_parser/
 scripts/
 parser.py
 cli.py

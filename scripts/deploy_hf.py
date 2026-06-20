@@ -13,6 +13,7 @@ Usage:
 """
 
 import argparse
+import os
 import re
 import sys
 import time
@@ -39,12 +40,14 @@ ALLOW_PATTERNS = [
     ".dockerignore",
     "README.md",
     "api/**",
+    "menu_parser/**",
     "rag.py",
     "embedder.py",
     "ingestor.py",
     "chunker.py",
     "config.py",
     "utils.py",
+    "ingest_service.py",
 ]
 
 
@@ -89,6 +92,14 @@ def main() -> None:
             continue
         api.add_space_secret(repo_id=repo_id, key=env_key, value=value)
         print(f"  secret set: {env_key}")
+
+    # Optional extra secrets read straight from the environment (.env is loaded
+    # by importing config above). Only set if present.
+    for env_key in ["INGEST_API_KEY"]:
+        value = os.getenv(env_key, "")
+        if value:
+            api.add_space_secret(repo_id=repo_id, key=env_key, value=value)
+            print(f"  secret set: {env_key}")
 
     root = Path(__file__).resolve().parent.parent
     print("Uploading backend files ...")
