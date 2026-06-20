@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,24 +12,49 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams } from 'expo-router';
 
-import { streamChat, type Source } from '@/lib/api';
-
-type Message = {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  sources?: Source[];
-  pending?: boolean;
-};
+import { streamChat, type ChatMessage, type HistoryTurn } from '@/lib/api';
+import {
+  clearConversation,
+  loadConversation,
+  saveConversation,
+} from '@/lib/storage';
 
 export default function ChatScreen() {
   const { restaurant } = useLocalSearchParams<{ restaurant?: string }>();
   const menu = restaurant ?? null;
+  const storeKey = menu ?? 'menu';
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
-  const listRef = useRef<FlatList<Message>>(null);
+  const listRef = useRef<FlatList<ChatMessage>>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Restore any saved conversation for this menu.
+  useEffect(() => {
+    let active = true;
+    loadConversation(storeKey).then((saved) => {
+      if (active && saved.length) setMessages(saved);
+    });
+    return () => {
+      active = false;
+    };
+  }, [storeKey]);
+
+  const persist = useCallback(() => {
+    setMessages((prev) => {
+      saveConversation(storeKey, prev);
+      return prev;
+    });
+  }, [storeKey]);
+
+  const clear = useCallback(() => {
+    abortRef.current?.abort();
+    setMessages([]);
+    clearConversation(storeKey);
+  }, [storeKey]);
+
+  const stop = useCallback(() => abortRef.current?.abort(), []);
 
   const send = useCallback(async () => {
     const question = input.trim();
@@ -38,6 +63,12 @@ export default function ChatScreen() {
     setInput('');
     setBusy(true);
 
+    // Build multi-turn context from the conversation so far.
+    const history: HistoryTurn[] = messages
+      .filter((m) => !m.pending && m.text)
+      .slice(-6)
+      .map((m) => ({ role: m.role, content: m.text }));
+
     const botId = `a${Date.now()}`;
     setMessages((prev) => [
       ...prev,
@@ -45,25 +76,41 @@ export default function ChatScreen() {
       { id: botId, role: 'assistant', text: '', pending: true },
     ]);
 
-    const patchBot = (fn: (m: Message) => Message) =>
+    const patchBot = (fn: (m: ChatMessage) => ChatMessage) =>
       setMessages((prev) => prev.map((m) => (m.id === botId ? fn(m) : m)));
 
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
-      await streamChat(question, menu, {
-        onSources: (sources) => patchBot((m) => ({ ...m, sources })),
-        onToken: (token) =>
-          patchBot((m) => ({ ...m, text: m.text + token, pending: false })),
-        onDone: () => patchBot((m) => ({ ...m, pending: false })),
-        onError: (msg) =>
-          patchBot((m) => ({ ...m, text: m.text || `⚠️ ${msg}`, pending: false })),
-      });
+      await streamChat(
+        question,
+        menu,
+        {
+          onSources: (sources) => patchBot((m) => ({ ...m, sources })),
+          onToken: (token) =>
+            patchBot((m) => ({ ...m, text: m.text + token, pending: false })),
+          onDone: () => patchBot((m) => ({ ...m, pending: false })),
+          onError: (msg) =>
+            patchBot((m) => ({ ...m, text: m.text || `⚠️ ${msg}`, pending: false })),
+        },
+        { history, signal: controller.signal },
+      );
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Request failed';
-      patchBot((m) => ({ ...m, text: m.text || `⚠️ ${msg}`, pending: false }));
+      const aborted = controller.signal.aborted;
+      patchBot((m) => ({
+        ...m,
+        text: aborted
+          ? m.text || '⏹ Stopped.'
+          : m.text || `⚠️ ${e instanceof Error ? e.message : 'Request failed'}`,
+        pending: false,
+      }));
     } finally {
+      abortRef.current = null;
       setBusy(false);
+      persist();
     }
-  }, [input, busy, menu]);
+  }, [input, busy, menu, messages, persist]);
 
   return (
     <KeyboardAvoidingView
@@ -71,7 +118,17 @@ export default function ChatScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <Stack.Screen options={{ title: menu ?? 'Chat' }} />
+      <Stack.Screen
+        options={{
+          title: menu ?? 'Chat',
+          headerRight: () =>
+            messages.length > 0 ? (
+              <Pressable onPress={clear} hitSlop={8}>
+                <Text style={styles.clearBtn}>Clear</Text>
+              </Pressable>
+            ) : null,
+        }}
+      />
 
       <FlatList
         ref={listRef}
@@ -84,7 +141,7 @@ export default function ChatScreen() {
         ListEmptyComponent={
           <Text style={styles.empty}>
             Ask anything about the {menu ?? 'menu'} — dishes, prices,
-            ingredients, or dietary options.
+            ingredients, or dietary options. Follow-up questions keep context.
           </Text>
         }
         renderItem={({ item }) => <Bubble msg={item} />}
@@ -102,24 +159,28 @@ export default function ChatScreen() {
           returnKeyType="send"
           multiline
         />
-        <Pressable
-          style={[styles.sendBtn, (busy || !input.trim()) && styles.sendBtnOff]}
-          onPress={send}
-          disabled={busy || !input.trim()}
-        >
-          <Text style={styles.sendText}>{busy ? '…' : 'Send'}</Text>
-        </Pressable>
+        {busy ? (
+          <Pressable style={[styles.sendBtn, styles.stopBtn]} onPress={stop}>
+            <Text style={styles.sendText}>Stop</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            style={[styles.sendBtn, !input.trim() && styles.sendBtnOff]}
+            onPress={send}
+            disabled={!input.trim()}
+          >
+            <Text style={styles.sendText}>Send</Text>
+          </Pressable>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-function Bubble({ msg }: { msg: Message }) {
+function Bubble({ msg }: { msg: ChatMessage }) {
   const isUser = msg.role === 'user';
   return (
-    <View
-      style={[styles.bubble, isUser ? styles.userBubble : styles.botBubble]}
-    >
+    <View style={[styles.bubble, isUser ? styles.userBubble : styles.botBubble]}>
       {msg.pending && !msg.text ? (
         <ActivityIndicator color="#c0392b" />
       ) : (
@@ -166,6 +227,7 @@ const styles = StyleSheet.create({
   bubbleText: { fontSize: 15, color: '#2c2420', lineHeight: 21 },
   userText: { color: '#fff' },
   sources: { fontSize: 11, color: '#9b908a', marginTop: 6 },
+  clearBtn: { color: '#c0392b', fontWeight: '600', fontSize: 15 },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -193,5 +255,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendBtnOff: { backgroundColor: '#d8b3ad' },
+  stopBtn: { backgroundColor: '#5a5048' },
   sendText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });

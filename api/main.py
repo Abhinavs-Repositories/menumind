@@ -55,9 +55,21 @@ def get_rag() -> MenuRAG:
     return _rag
 
 
+class Turn(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
 class ChatRequest(BaseModel):
     question: str
     restaurant: Optional[str] = None
+    history: Optional[list[Turn]] = None
+
+
+@app.get("/")
+def root() -> dict:
+    """Root route so platform health probes (e.g. HF Spaces) see a 200."""
+    return {"service": "menumind-api", "status": "ok", "docs": "/docs"}
 
 
 @app.get("/health")
@@ -88,9 +100,13 @@ def chat(req: ChatRequest) -> StreamingResponse:
 
     rag = get_rag()
 
+    history = [t.model_dump() for t in req.history] if req.history else None
+
     def event_stream():
         try:
-            for ev in rag.ask_stream(req.question, restaurant=req.restaurant):
+            for ev in rag.ask_stream(
+                req.question, restaurant=req.restaurant, history=history
+            ):
                 yield _sse(ev["type"], ev["data"])
         except Exception as exc:
             logger.exception("chat stream failed")

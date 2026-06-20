@@ -6,6 +6,19 @@ import { API_URL } from '@/config';
 
 export type Source = { page: number; score: number; preview: string };
 export type DoneMeta = { retrieval_count: number; time_s: number };
+export type Role = 'user' | 'assistant';
+
+/** A chat bubble in the UI (persisted per restaurant). */
+export type ChatMessage = {
+  id: string;
+  role: Role;
+  text: string;
+  sources?: Source[];
+  pending?: boolean;
+};
+
+/** A prior turn sent to the backend for multi-turn follow-ups. */
+export type HistoryTurn = { role: Role; content: string };
 
 export type ChatHandlers = {
   onSources?: (sources: Source[]) => void;
@@ -31,13 +44,13 @@ export async function streamChat(
   question: string,
   restaurant: string | null,
   handlers: ChatHandlers,
-  signal?: AbortSignal,
+  options: { history?: HistoryTurn[]; signal?: AbortSignal } = {},
 ): Promise<void> {
   const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-    body: JSON.stringify({ question, restaurant }),
-    signal,
+    body: JSON.stringify({ question, restaurant, history: options.history }),
+    signal: options.signal,
   });
 
   if (!res.ok || !res.body) {

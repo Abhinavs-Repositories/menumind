@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   FlatList,
   Pressable,
+  RefreshControl,
   StyleSheet,
   Text,
   View,
@@ -16,6 +17,7 @@ export default function MenusScreen() {
   const router = useRouter();
   const [menus, setMenus] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -27,6 +29,18 @@ export default function MenusScreen() {
       setError(e instanceof Error ? e.message : 'Failed to load menus');
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      setMenus(await fetchMenus());
+      setError(null);
+    } catch {
+      // keep current list on a failed refresh
+    } finally {
+      setRefreshing(false);
     }
   }, []);
 
@@ -63,6 +77,13 @@ export default function MenusScreen() {
         data={menus}
         keyExtractor={(item) => item}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#c0392b"
+          />
+        }
         renderItem={({ item }) => (
           <Pressable
             style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}

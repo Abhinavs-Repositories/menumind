@@ -103,6 +103,7 @@ class MenuRAG:
         question: str,
         restaurant: Optional[str] = None,
         page_filter: Optional[int] = None,
+        history: Optional[list[dict]] = None,
     ):
         """Streaming RAG: yields event dicts as the answer is produced.
 
@@ -137,7 +138,7 @@ class MenuRAG:
             ],
         }
 
-        for token in self._generate_stream(question, context):
+        for token in self._generate_stream(question, context, history):
             yield {"type": "token", "data": token}
 
         elapsed = time.time() - start
@@ -284,15 +285,30 @@ class MenuRAG:
         answer = resp.choices[0].message.content
         return answer, gen_time
 
-    def _generate_stream(self, question: str, context: str):
-        """Yield answer text chunks from Groq as they stream in."""
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+    def _generate_stream(
+        self,
+        question: str,
+        context: str,
+        history: Optional[list[dict]] = None,
+    ):
+        """Yield answer text chunks from Groq as they stream in.
+
+        `history` is prior turns ([{role, content}, ...]) for multi-turn
+        follow-ups; only the most recent few are kept to bound the prompt.
+        """
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        if history:
+            for turn in history[-6:]:
+                role = turn.get("role")
+                content = turn.get("content")
+                if role in ("user", "assistant") and content:
+                    messages.append({"role": role, "content": content})
+        messages.append(
             {
                 "role": "user",
                 "content": f"Question: {question}\n\nContext:\n{context}\n\nAnswer based on the context above.",
-            },
-        ]
+            }
+        )
 
         stream = self.groq.chat.completions.create(
             model=self.groq_model,
