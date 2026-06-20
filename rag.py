@@ -61,11 +61,12 @@ class MenuRAG:
         self,
         question: str,
         page_filter: Optional[int] = None,
+        restaurant: Optional[str] = None,
     ) -> dict:
         """Run the full RAG pipeline: embed → retrieve → generate."""
         start = time.time()
 
-        docs = self._retrieve(question, page_filter)
+        docs = self._retrieve(question, page_filter, restaurant)
         if not docs:
             return {
                 "question": question,
@@ -97,6 +98,55 @@ class MenuRAG:
             "time_s": round(elapsed, 2),
         }
 
+    def ask_stream(
+        self,
+        question: str,
+        restaurant: Optional[str] = None,
+        page_filter: Optional[int] = None,
+    ):
+        """Streaming RAG: yields event dicts as the answer is produced.
+
+        Event shapes (transport-agnostic; the API layer formats these as SSE):
+            {"type": "sources", "data": [{page, score, preview}, ...]}
+            {"type": "token",   "data": "next text chunk"}
+            {"type": "done",    "data": {"retrieval_count", "time_s"}}
+        """
+        start = time.time()
+
+        docs = self._retrieve(question, page_filter, restaurant)
+        if not docs:
+            yield {"type": "sources", "data": []}
+            yield {
+                "type": "token",
+                "data": "I couldn't find relevant information in this menu. Try rephrasing your question.",
+            }
+            yield {
+                "type": "done",
+                "data": {"retrieval_count": 0, "time_s": round(time.time() - start, 2)},
+            }
+            return
+
+        docs = self._rerank(question, docs)
+        context = self._build_context(docs)
+
+        yield {
+            "type": "sources",
+            "data": [
+                {"page": d["page_number"], "score": round(d["score"], 4), "preview": d["text"][:200]}
+                for d in docs[:3]
+            ],
+        }
+
+        for token in self._generate_stream(question, context):
+            yield {"type": "token", "data": token}
+
+        elapsed = time.time() - start
+        logger.info("RAG streamed answer in %.2fs", elapsed)
+        yield {
+            "type": "done",
+            "data": {"retrieval_count": len(docs), "time_s": round(elapsed, 2)},
+        }
+
     # ------------------------------------------------------------------
     # Pipeline steps
     # ------------------------------------------------------------------
@@ -105,14 +155,20 @@ class MenuRAG:
         self,
         query: str,
         page_filter: Optional[int] = None,
+        restaurant: Optional[str] = None,
     ) -> list[dict]:
         query_vec = self.embedder.embed_text(query, task_type="RETRIEVAL_QUERY")
 
-        search_filter = None
+        conditions = []
         if page_filter is not None:
-            search_filter = Filter(
-                must=[FieldCondition(key="page_number", match=MatchValue(value=page_filter))]
+            conditions.append(
+                FieldCondition(key="page_number", match=MatchValue(value=page_filter))
             )
+        if restaurant:
+            conditions.append(
+                FieldCondition(key="restaurant", match=MatchValue(value=restaurant))
+            )
+        search_filter = Filter(must=conditions) if conditions else None
 
         results = self.qdrant.query_points(
             collection_name=self.collection_name,
@@ -195,3 +251,25 @@ class MenuRAG:
 
         answer = resp.choices[0].message.content
         return answer, gen_time
+
+    def _generate_stream(self, question: str, context: str):
+        """Yield answer text chunks from Groq as they stream in."""
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": f"Question: {question}\n\nContext:\n{context}\n\nAnswer based on the context above.",
+            },
+        ]
+
+        stream = self.groq.chat.completions.create(
+            model=self.groq_model,
+            messages=messages,
+            temperature=0.1,
+            max_tokens=1000,
+            stream=True,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta

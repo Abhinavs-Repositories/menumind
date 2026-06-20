@@ -14,7 +14,7 @@ _PAGE_MARKER_RE = re.compile(r"<!-- (?:text|table|figure), from page (\d+)")
 class Chunk:
     """A single text chunk from a menu document."""
 
-    __slots__ = ("chunk_id", "page_number", "text", "char_count", "chunk_type")
+    __slots__ = ("chunk_id", "page_number", "text", "char_count", "chunk_type", "restaurant")
 
     def __init__(
         self,
@@ -22,12 +22,14 @@ class Chunk:
         page_number: int,
         text: str,
         chunk_type: str = "page",
+        restaurant: str = "",
     ):
         self.chunk_id = chunk_id
         self.page_number = page_number
         self.text = text
         self.char_count = len(text)
         self.chunk_type = chunk_type
+        self.restaurant = restaurant
 
     def to_dict(self) -> dict:
         return {
@@ -36,6 +38,7 @@ class Chunk:
             "text": self.text,
             "char_count": self.char_count,
             "chunk_type": self.chunk_type,
+            "restaurant": self.restaurant,
         }
 
 

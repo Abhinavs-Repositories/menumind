@@ -3,13 +3,26 @@ import time
 from typing import Optional
 
 from google import genai
+from google.genai import errors as genai_errors
 from google.genai import types
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from chunker import Chunk
 from config import get_settings
 from utils import truncate
 
 logger = logging.getLogger(__name__)
+
+
+def _is_rate_limit(exc: BaseException) -> bool:
+    """True for Gemini 429 RESOURCE_EXHAUSTED (free-tier rate limit)."""
+    return isinstance(exc, genai_errors.ClientError) and getattr(exc, "code", None) == 429
 
 
 class EmbeddedChunk:
@@ -44,20 +57,31 @@ class GeminiEmbedder:
         self.model = model or settings.embedding_model
         self.dimensions = dimensions or settings.embedding_dimensions
 
+    @retry(
+        retry=retry_if_exception(_is_rate_limit),
+        wait=wait_exponential(multiplier=2, min=5, max=65),
+        stop=stop_after_attempt(8),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    def _embed_call(self, contents, task_type: str):
+        """Single embed_content request, retried with backoff on 429."""
+        return self._client.models.embed_content(
+            model=self.model,
+            contents=contents,
+            config=types.EmbedContentConfig(
+                output_dimensionality=self.dimensions,
+                task_type=task_type,
+            ),
+        )
+
     def embed_text(
         self,
         text: str,
         task_type: str = "RETRIEVAL_QUERY",
     ) -> list[float]:
         """Embed a single text string. Use RETRIEVAL_QUERY for search queries."""
-        result = self._client.models.embed_content(
-            model=self.model,
-            contents=truncate(text, max_chars=8000),
-            config=types.EmbedContentConfig(
-                output_dimensionality=self.dimensions,
-                task_type=task_type,
-            ),
-        )
+        result = self._embed_call(truncate(text, max_chars=8000), task_type)
         return list(result.embeddings[0].values)
 
     def embed_texts(
@@ -71,14 +95,7 @@ class GeminiEmbedder:
 
         for i in range(0, len(texts), batch_size):
             batch = [truncate(t, max_chars=8000) for t in texts[i : i + batch_size]]
-            result = self._client.models.embed_content(
-                model=self.model,
-                contents=batch,
-                config=types.EmbedContentConfig(
-                    output_dimensionality=self.dimensions,
-                    task_type=task_type,
-                ),
-            )
+            result = self._embed_call(batch, task_type)
             all_embeddings.extend(list(e.values) for e in result.embeddings)
 
         return all_embeddings

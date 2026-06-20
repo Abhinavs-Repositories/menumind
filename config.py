@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     # --- Groq (LLM generation) ---
     groq_api_key: str = Field(default="")
-    groq_model: str = "meta-llama/llama-4-maverick-17b-128e-instruct"
+    groq_model: str = "llama-3.3-70b-versatile"
 
     # --- Agentic Doc (PDF parsing) ---
     vision_agent_api_key: str = Field(default="")

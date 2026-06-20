@@ -5,6 +5,7 @@ import uuid
 from qdrant_client import QdrantClient
 from qdrant_client.models import (
     Distance,
+    PayloadSchemaType,
     PointStruct,
     UpdateStatus,
     VectorParams,
@@ -62,6 +63,25 @@ class QdrantIngestor:
                 info.points_count,
                 info.config.params.vectors.size,
             )
+
+        self.ensure_payload_indexes()
+
+    def ensure_payload_indexes(self) -> None:
+        """Create payload indexes needed for filtered retrieval (idempotent)."""
+        indexes = {
+            "restaurant": PayloadSchemaType.KEYWORD,
+            "page_number": PayloadSchemaType.INTEGER,
+        }
+        for field, schema in indexes.items():
+            try:
+                self.client.create_payload_index(
+                    collection_name=self.collection_name,
+                    field_name=field,
+                    field_schema=schema,
+                )
+                logger.info("Created payload index on '%s'", field)
+            except Exception as exc:  # already exists -> Qdrant returns an error
+                logger.debug("Payload index on '%s' not created (%s)", field, exc)
 
     def collection_info(self) -> dict:
         """Return basic collection stats."""
@@ -137,6 +157,7 @@ class QdrantIngestor:
                 "page_number": c.page_number,
                 "chunk_id": c.chunk_id,
                 "chunk_type": c.chunk_type,
+                "restaurant": c.restaurant,
                 "original_id": f"page_{c.page_number}_chunk_{c.chunk_id}",
             }
             points.append(

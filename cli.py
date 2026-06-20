@@ -67,6 +67,7 @@ def cmd_embed(args: argparse.Namespace) -> None:
             page_number=c.get("page_number", 0),
             text=c["text"],
             chunk_type=c.get("chunk_type", "unknown"),
+            restaurant=c.get("restaurant", ""),
         )
         for i, c in enumerate(raw_chunks)
     ]
@@ -103,6 +104,7 @@ def cmd_ingest(args: argparse.Namespace) -> None:
                 page_number=c.get("page_number", 0),
                 text=c["text"],
                 chunk_type=c.get("chunk_type", "unknown"),
+                restaurant=c.get("restaurant", ""),
             ),
             embedding=c["embedding"],
         )
@@ -124,7 +126,7 @@ def cmd_ask(args: argparse.Namespace) -> None:
     from rag import MenuRAG
 
     rag = MenuRAG(collection_name=args.collection)
-    result = rag.ask(args.question, page_filter=args.page)
+    result = rag.ask(args.question, page_filter=args.page, restaurant=args.restaurant)
 
     print(f"\n{result['answer']}")
     print(f"\n--- {result['retrieval_count']} docs retrieved, {result['time_s']}s total ---")
@@ -140,9 +142,13 @@ def cmd_pipeline(args: argparse.Namespace) -> None:
     from embedder import GeminiEmbedder
     from ingestor import QdrantIngestor
     from parser import MenuParser
+    from utils import restaurant_label
+
+    restaurant = args.restaurant or restaurant_label(Path(args.input).stem)
 
     print("=" * 60)
     print("MENUMIND FULL PIPELINE")
+    print(f"  restaurant: {restaurant}")
     print("=" * 60)
 
     # 1. Parse
@@ -155,6 +161,8 @@ def cmd_pipeline(args: argparse.Namespace) -> None:
     print("\n[2/4] Chunking ...")
     chunker = MenuChunker()
     chunks = chunker.chunk_file(result.raw_markdown_path, json_path=result.json_path)
+    for c in chunks:
+        c.restaurant = restaurant
     print(f"  -> {len(chunks)} chunks")
 
     # 3. Embed
@@ -214,12 +222,14 @@ def main() -> None:
     p.add_argument("question", help="Your question")
     p.add_argument("-c", "--collection", help="Qdrant collection name")
     p.add_argument("--page", type=int, help="Filter to a specific page number")
+    p.add_argument("-r", "--restaurant", help="Filter to a specific restaurant/menu")
 
     # --- pipeline ---
     p = sub.add_parser("pipeline", help="Run full pipeline: parse -> chunk -> embed -> ingest")
     p.add_argument("input", help="PDF/image file to process")
     p.add_argument("-c", "--collection", help="Qdrant collection name")
     p.add_argument("-o", "--output", default="parse_output", help="Output directory")
+    p.add_argument("-r", "--restaurant", help="Restaurant/menu name (default: cleaned filename)")
     p.add_argument("--recreate", action="store_true", help="Recreate collection from scratch")
 
     args = ap.parse_args()
