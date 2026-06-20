@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 
 import { fetchMenus } from '@/lib/api';
 
@@ -48,6 +48,21 @@ export default function MenusScreen() {
     load();
   }, [load]);
 
+  // Silently refresh when returning to this screen (e.g. after adding a menu).
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      fetchMenus()
+        .then((m) => {
+          if (active) setMenus(m);
+        })
+        .catch(() => {});
+      return () => {
+        active = false;
+      };
+    }, []),
+  );
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -72,6 +87,15 @@ export default function MenusScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <Pressable onPress={() => router.push('/add-menu')} hitSlop={8}>
+              <Text style={styles.addBtn}>＋ Add</Text>
+            </Pressable>
+          ),
+        }}
+      />
       <Text style={styles.subtitle}>Pick a menu to start chatting</Text>
       <FlatList
         data={menus}
@@ -133,6 +157,7 @@ const styles = StyleSheet.create({
   },
   cardPressed: { backgroundColor: '#f1eae7' },
   cardTitle: { fontSize: 18, fontWeight: '600', color: '#2c2420' },
+  addBtn: { color: '#c0392b', fontWeight: '700', fontSize: 16 },
   chevron: { fontSize: 26, color: '#c0392b', fontWeight: '300' },
   errorText: { fontSize: 16, color: '#c0392b', textAlign: 'center', fontWeight: '600' },
   errorHint: { fontSize: 13, color: '#7a6f6a', textAlign: 'center', marginTop: 8 },

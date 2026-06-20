@@ -14,6 +14,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="index" options={{ title: 'MenuMind' }} />
         <Stack.Screen name="chat" options={{ title: 'Chat' }} />
+        <Stack.Screen name="add-menu" options={{ title: 'Add a menu' }} />
       </Stack>
     </>
   );

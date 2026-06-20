@@ -36,6 +36,54 @@ export async function fetchMenus(): Promise<string[]> {
   return (await res.json()) as string[];
 }
 
+const INGEST_KEY = process.env.EXPO_PUBLIC_INGEST_KEY;
+
+export type IngestStatus = {
+  status: 'processing' | 'done' | 'error';
+  restaurant?: string;
+  pages?: number;
+  chunks?: number;
+  error?: string;
+};
+
+export type PickedFile = { uri: string; name: string; mimeType?: string };
+
+/** Upload a menu file for ingestion; returns a job id to poll. */
+export async function uploadMenu(
+  restaurant: string,
+  file: PickedFile,
+): Promise<string> {
+  const form = new FormData();
+  form.append('restaurant', restaurant);
+  // React Native FormData file part: { uri, name, type }.
+  form.append('file', {
+    uri: file.uri,
+    name: file.name,
+    type: file.mimeType ?? 'application/octet-stream',
+  } as unknown as Blob);
+
+  // Use the platform fetch (not expo/fetch) for multipart uploads.
+  const res = await globalThis.fetch(`${API_URL}/ingest`, {
+    method: 'POST',
+    headers: INGEST_KEY ? { 'X-Ingest-Key': INGEST_KEY } : undefined,
+    body: form,
+  });
+  if (!res.ok) {
+    throw new Error(`Upload failed (HTTP ${res.status})`);
+  }
+  const data = (await res.json()) as { job_id: string };
+  return data.job_id;
+}
+
+/** Poll the status of an ingestion job. */
+export async function getIngestStatus(jobId: string): Promise<IngestStatus> {
+  const res = await globalThis.fetch(`${API_URL}/ingest/${jobId}`);
+  if (!res.ok) {
+    throw new Error(`Status check failed (HTTP ${res.status})`);
+  }
+  return (await res.json()) as IngestStatus;
+}
+
 /**
  * Stream a RAG answer for `question` scoped to one `restaurant`.
  * Resolves when the stream ends; invokes handlers as events arrive.
