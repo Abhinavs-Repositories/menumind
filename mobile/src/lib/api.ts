@@ -1,6 +1,7 @@
 // MenuMind API client. Uses expo/fetch so the response body is a real
 // ReadableStream on iOS/Android/web, letting us stream the answer token by token.
 import { fetch } from 'expo/fetch';
+import { Platform } from 'react-native';
 
 import { API_URL } from '@/config';
 
@@ -55,23 +56,42 @@ export async function uploadMenu(
 ): Promise<string> {
   const form = new FormData();
   form.append('restaurant', restaurant);
-  // React Native FormData file part: { uri, name, type }.
-  form.append('file', {
-    uri: file.uri,
-    name: file.name,
-    type: file.mimeType ?? 'application/octet-stream',
-  } as unknown as Blob);
 
-  // Use the platform fetch (not expo/fetch) for multipart uploads.
-  const res = await globalThis.fetch(`${API_URL}/ingest`, {
-    method: 'POST',
-    headers: INGEST_KEY ? { 'X-Ingest-Key': INGEST_KEY } : undefined,
-    body: form,
-  });
-  if (!res.ok) {
-    throw new Error(`Upload failed (HTTP ${res.status})`);
+  if (Platform.OS === 'web') {
+    // Browsers need a real Blob/File, not a { uri } object.
+    const blob = await (await globalThis.fetch(file.uri)).blob();
+    form.append('file', blob, file.name);
+  } else {
+    // React Native's XHR understands the { uri, name, type } file part.
+    form.append('file', {
+      uri: file.uri,
+      name: file.name,
+      type: file.mimeType ?? 'application/octet-stream',
+    } as unknown as Blob);
   }
-  const data = (await res.json()) as { job_id: string };
+
+  // Send via XMLHttpRequest: in Expo SDK 56 the global fetch is expo/fetch,
+  // which rejects the { uri } file part with "Unsupported FormDataPart
+  // implementation". XHR handles multipart file uploads on every platform.
+  const data = await new Promise<{ job_id: string }>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${API_URL}/ingest`);
+    if (INGEST_KEY) xhr.setRequestHeader('X-Ingest-Key', INGEST_KEY);
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch {
+          reject(new Error('Unexpected response from server'));
+        }
+      } else {
+        reject(new Error(`Upload failed (HTTP ${xhr.status})`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Network error during upload'));
+    xhr.send(form);
+  });
+
   return data.job_id;
 }
 

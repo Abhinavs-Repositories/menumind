@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -10,6 +9,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useLocalSearchParams } from 'expo-router';
 
 import { streamChat, type ChatMessage, type HistoryTurn } from '@/lib/api';
@@ -29,6 +30,9 @@ export default function ChatScreen() {
   const [busy, setBusy] = useState(false);
   const listRef = useRef<FlatList<ChatMessage>>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const insets = useSafeAreaInsets();
+  // Offset for the stack header so the input lands just above the keyboard.
+  const headerOffset = (Platform.OS === 'ios' ? 44 : 56) + insets.top;
 
   // Restore any saved conversation for this menu.
   useEffect(() => {
@@ -115,8 +119,8 @@ export default function ChatScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      behavior="padding"
+      keyboardVerticalOffset={headerOffset}
     >
       <Stack.Screen
         options={{
