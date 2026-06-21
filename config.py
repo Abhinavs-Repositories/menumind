@@ -17,6 +17,10 @@ class Settings(BaseSettings):
 
     # --- Google Gemini (menu parsing / vision) ---
     vision_model: str = "gemini-2.5-flash"
+    # Cap output per page so a runaway/looping generation fails fast with a
+    # clear truncation error instead of emitting ~1MB of unterminated JSON.
+    # One dense menu page is well under this; raise it only if real pages truncate.
+    vision_max_output_tokens: int = 8192
 
     # --- Qdrant Cloud (vector store) ---
     qdrant_url: str = Field(default="")

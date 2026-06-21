@@ -51,9 +51,18 @@ class MenuPage(BaseModel):
 
 
 class GeminiMenuResponse(BaseModel):
-    """Top-level schema Gemini fills in a single multimodal call."""
+    """Aggregate result shape (all pages stitched together)."""
 
     pages: list[MenuPage] = Field(default_factory=list)
+    extraction: MenuExtractionFields
+
+
+class SinglePageResponse(BaseModel):
+    """Schema Gemini fills for ONE page. Parsing per page bounds each response
+    so a single dense/looping page can't balloon into an unterminated megabyte
+    of JSON, and one bad page no longer fails the whole document."""
+
+    blocks: list[MenuBlock] = Field(default_factory=list)
     extraction: MenuExtractionFields
 
 
@@ -66,8 +75,8 @@ class MenuParseResult(BaseModel):
     raw_response: dict
 
 
-SYSTEM_PROMPT = """You are a precise menu-document parser. You will be shown every page of a \
-restaurant menu, in order, as images. Convert them into the JSON schema you've been given. \
+SYSTEM_PROMPT = """You are a precise menu-document parser. You will be shown one page of a \
+restaurant menu as an image. Convert it into the JSON schema you've been given. \
 Follow these rules exactly:
 
 1. ITEM-PRICE BINDING: Menus rarely use table borders. Items and their prices are usually \
@@ -115,10 +124,11 @@ prices, descriptions, beverages, contact info, hours, special offers), drawing o
 is visibly printed across all pages."""
 
 
-def _build_user_prompt(page_count: int) -> str:
+def _build_page_prompt(page_number: int, total: int) -> str:
     return (
-        f"This menu has {page_count} page(s), provided as images in order below "
-        f"(page 1 first). Parse all pages into the required JSON schema."
+        f"This is page {page_number} of {total} of a restaurant menu, provided as "
+        f"one image. Parse THIS page into the required JSON schema: its content "
+        f"blocks, plus the structured fields visible on this page."
     )
 
 
@@ -134,33 +144,79 @@ class GeminiMenuClient:
             )
         self._client = genai.Client(api_key=self._api_key)
         self.model = model or settings.vision_model
+        self.max_output_tokens = settings.vision_max_output_tokens
 
     def parse_menu(self, file_path: Path) -> MenuParseResult:
-        """Parse a PDF or image file into Markdown + structured menu fields."""
+        """Parse a PDF or image file into Markdown + structured menu fields.
+
+        Pages are parsed one at a time: this bounds each Gemini response (so a
+        dense or looping page can't produce an unterminated megabyte of JSON)
+        and isolates failures (a single unparseable page is skipped, not fatal).
+        """
         file_path = Path(file_path)
         images = load_pages_as_images(file_path)
 
-        contents = [_build_user_prompt(len(images)), *images]
-        response = self._generate(contents)
+        pages: list[MenuPage] = []
+        extractions: list[MenuExtractionFields] = []
+        failures: list[str] = []
 
-        try:
-            parsed = GeminiMenuResponse.model_validate_json(response.text)
-        except (ValidationError, ValueError) as e:
+        for idx, image in enumerate(images, start=1):
+            try:
+                page = self._parse_page(image, idx, len(images))
+            except RateLimitExceeded:
+                # Quota/RPM is global, not page-specific — let the caller decide.
+                raise
+            except ParseValidationError as e:
+                logger.warning(
+                    "Skipping page %d/%d of %s: %s", idx, len(images), file_path.name, e
+                )
+                failures.append(f"p{idx}: {e}")
+                continue
+            pages.append(MenuPage(page_number=idx, blocks=page.blocks))
+            extractions.append(page.extraction)
+
+        if not pages:
             raise ParseValidationError(
-                f"Gemini output failed schema validation for {file_path.name}: {e}",
-                raw_response={"text": response.text},
-            ) from e
+                f"Gemini failed to parse any page of {file_path.name} "
+                f"({'; '.join(failures) or 'no pages'})"
+            )
+        if failures:
+            logger.warning(
+                "%s: parsed %d/%d pages (%d skipped)",
+                file_path.name, len(pages), len(images), len(failures),
+            )
 
-        markdown = _stitch_markdown(parsed.pages)
+        extraction = _merge_extractions(extractions)
+        markdown = _stitch_markdown(pages)
+        aggregate = GeminiMenuResponse(pages=pages, extraction=extraction)
         return MenuParseResult(
             markdown=markdown,
-            structured=parsed.extraction,
+            structured=extraction,
             page_count=len(images),
-            raw_response=parsed.model_dump(),
+            raw_response=aggregate.model_dump(),
         )
 
+    def _parse_page(self, image, page_number: int, total: int) -> SinglePageResponse:
+        """Parse a single page image into blocks + structured fields."""
+        response = self._generate([_build_page_prompt(page_number, total), image])
+        _raise_if_truncated(response, page_number)
+
+        text = getattr(response, "text", None)
+        if not text:
+            raise ParseValidationError(
+                f"Gemini returned an empty response for page {page_number} "
+                f"(possibly blocked or no extractable content)"
+            )
+        try:
+            return SinglePageResponse.model_validate_json(text)
+        except (ValidationError, ValueError) as e:
+            raise ParseValidationError(
+                f"page {page_number} failed schema validation: {e}",
+                raw_response={"text": text[:2000]},
+            ) from e
+
     @retry(
-        retry=retry_if_exception_type(errors.ServerError),
+        retry=retry_if_exception_type((errors.ServerError, RateLimitExceeded)),
         stop=stop_after_attempt(4),
         wait=wait_exponential(multiplier=2, min=2, max=30),
         reraise=True,
@@ -173,20 +229,62 @@ class GeminiMenuClient:
                 config=types.GenerateContentConfig(
                     system_instruction=SYSTEM_PROMPT,
                     response_mime_type="application/json",
-                    response_schema=GeminiMenuResponse,
+                    response_schema=SinglePageResponse,
                     # Disable extended thinking: this is deterministic OCR +
                     # structured extraction, not multi-step reasoning, so the
                     # thinking budget only adds latency/cost here.
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
                     temperature=0.1,
+                    # Bound the output so a looping generation fails fast (caught
+                    # as a truncation error) instead of emitting ~1MB of JSON.
+                    max_output_tokens=self.max_output_tokens,
                 ),
             )
         except errors.ClientError as e:
             if e.code == 429:
+                # Transient per-minute RPM limits are retried by @retry above;
+                # if they persist (daily quota), the final raise surfaces here.
                 raise RateLimitExceeded(
-                    f"Gemini free-tier rate limit hit (15 RPM / 1500 req/day): {e}"
+                    f"Gemini free-tier rate limit hit (RPM / daily quota): {e}"
                 ) from e
             raise
+
+
+def _raise_if_truncated(response, page_number: int) -> None:
+    """Detect a MAX_TOKENS cutoff and raise a clear error.
+
+    Without this, a truncated response yields unterminated JSON and surfaces as
+    a cryptic 'EOF while parsing a string' validation error.
+    """
+    candidates = getattr(response, "candidates", None) or []
+    if not candidates:
+        return
+    finish_reason = getattr(candidates[0], "finish_reason", None)
+    name = getattr(finish_reason, "name", str(finish_reason) if finish_reason else "")
+    if name == "MAX_TOKENS":
+        raise ParseValidationError(
+            f"page {page_number} response was truncated at the output-token limit "
+            f"(finish_reason=MAX_TOKENS) — the page may be unusually dense, or the "
+            f"model looped. Try raising VISION_MAX_OUTPUT_TOKENS or splitting the PDF."
+        )
+
+
+def _merge_extractions(parts: list[MenuExtractionFields]) -> MenuExtractionFields:
+    """Combine per-page structured fields into one document-level extraction."""
+    merged = MenuExtractionFields()
+    for p in parts:
+        merged.restaurant_name = merged.restaurant_name or p.restaurant_name
+        merged.contact_info = merged.contact_info or p.contact_info
+        merged.hours = merged.hours or p.hours
+        merged.menu_sections.extend(p.menu_sections)
+        merged.item_names.extend(p.item_names)
+        merged.prices.extend(p.prices)
+        merged.descriptions.extend(p.descriptions)
+        merged.beverages.extend(p.beverages)
+        merged.special_offers.extend(p.special_offers)
+    # De-dupe section names while preserving first-seen order.
+    merged.menu_sections = list(dict.fromkeys(merged.menu_sections))
+    return merged
 
 
 def _stitch_markdown(pages: list[MenuPage]) -> str:
