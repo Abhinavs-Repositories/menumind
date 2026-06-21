@@ -1,0 +1,267 @@
+{
+  "generated_at": "2026-06-21T11:40:02.635705+00:00",
+  "backend": "groq:llama-3.3-70b-versatile",
+  "collection": "mocha_menu_embeddings",
+  "count": 20,
+  "items": [
+    {
+      "id": "syn-celeste-kanpur-00",
+      "restaurant": "Celeste Kanpur",
+      "question": "What type of drinks are offered in the BEVERAGES section?",
+      "expected_facts": [
+        "BEVERAGES",
+        "Refreshing Classics And Comfort Drinks"
+      ],
+      "expected_answer": "Refreshing Classics And Comfort Drinks",
+      "category": "description",
+      "source_id": "374794b7-66d3-4ac5-9dc8-326032b65541",
+      "source_text": "BEVERAGES\nRefreshing Classics And Comfort Drinks"
+    },
+    {
+      "id": "syn-celeste-kanpur-01",
+      "restaurant": "Celeste Kanpur",
+      "question": "What type of dietary options are available?",
+      "expected_facts": [
+        "Vegetarian",
+        "Non Vegetarian",
+        "Vegan"
+      ],
+      "expected_answer": "Vegetarian, Non Vegetarian, Vegan",
+      "category": "dietary",
+      "source_id": "171ec4fc-2fe7-40d8-b362-6da4c0abef09",
+      "source_text": "List of Allergens:\nMolluscs Eggs Fish Lupin Soya Milk Peanuts Gluten Crustaceans Mustard Nuts Sesame Celery Sulphites\nKindly inform our associates of any food allergies or dietary restrictions.\nAll prices are in Indian rupees and subject to applicable government taxes.\nAs per the guidelines issued by food safety & standards authority of India (FSSAI).\nAn average active adult requires 2000 kcals of energy per day. However, the actual calories needed may vary per person.\nVegetarian Non Vegetarian Vegan"
+    },
+    {
+      "id": "syn-marriott-00",
+      "restaurant": "Marriott",
+      "question": "How much does the CLASSIC FRUIT & YOGURT CUP cost?",
+      "expected_facts": [
+        "CLASSIC FRUIT & YOGURT CUP",
+        "8.00"
+      ],
+      "expected_answer": "8.00",
+      "category": "price",
+      "source_id": "9734319d-0903-4bae-b45e-34f42e3dab95",
+      "source_text": "MORNING\n\nFRUIT | GRAINS | BOARDS\n\nFRUIT & BERRY CUP 200 cal\n7.00\ncantaloupe, strawberries, blueberries\nCLASSIC FRUIT & YOGURT CUP 200 cal\n8.00\ngreek yogurt | fresh berries | granola | honey\nSTEEL CUT OATMEAL 200 cal\n7.50\nblueberries | maple syrup\nAVOCADO TOAST 220 cal\n9.00\navocado | whole grain toast | oven roasted tomatoes\ngreen onions | hard-cooked egg | lemon dressed arugula\n\nSANDWICH | EGG | GRIDDLE\n\nBISTRO BREAKFAST SANDWICH 400 cal\n11.00\neggs | bacon | white cheddar | arugula | avocado | brioche roll\nBALANCED BREAKFAST SANDWICH 400 cal\n11.00\negg whites | turkey breast | green chile | white cheddar\narugula | english muffin\nEGG WHITE FRITTATA 280 cal\n12.00\negg whites | monterey jack cheese | arugula | cucumber\ntomato | green onions | avocado mash | lemon vinaigrette\nBREAKFAST BURRITO 500 cal\n11.00\nscrambled eggs | bacon | breakfast potatoes | white cheddar\ncaramelized onions | jack cheese | salsa | avocado mash\nFRENCH TOAST WITH STRAWBERRIES 640 cal\n10.00\nstrawberries | powdered sugar | butter | maple syrup\nLEMON BLUEBERRY RICOTTA PANCAKES 700 cal\n12.00\nblueberries | powdered sugar | blueberry sauce | ricotta\nlemon zest | maple syrup\nBREAKFAST QUESADILLA 500 cal\n10.50\neggs | green chiles | jack | jack cheese | aged white cheddar\ngarlic aioli | green onions | salsa | avocado mash\nFARMSTAND BREAKFAST BOWL 480 cal\n12.00\nbreakfast potatoes | scrambled eggs | oven roasted tomatoes\nbaby kale | green onions | parmesan | avocado mash\nSIDE BREAKFAST POTATOES\n4.00\nSIDE (2) SCRAMBLED EGGS\n4.00\n\nBREAKFAST GRAB AND GO\n\nPLAIN OR EVERYTHING BAGEL 240-260 cal\n4.50\nplain cream cheese or herb cream cheese\nPASTRIES 280 cal\n3.50\ncroissant | coffee cake | banana bread\nMUFFINS\n3.50\nblueberry | apple-cinnamon | double chocolate chip\n*gluten-free option available"
+    },
+    {
+      "id": "syn-marriott-01",
+      "restaurant": "Marriott",
+      "question": "How much does the GRILLED CHICKEN & BACON QUESADILLA cost?",
+      "expected_facts": [
+        "GRILLED CHICKEN & BACON QUESADILLA",
+        "11.50"
+      ],
+      "expected_answer": "11.50",
+      "category": "price",
+      "source_id": "011b8e4f-27ab-42e4-b191-8864cc8dd7ec",
+      "source_text": "AFTERNOON/EVENING\n\nSOCIAL SNACKS\n\nGRILLED CHICKEN & BACON QUESADILLA 500 cal\n11.50\nchicken | bacon | green chile | salsa | avocado mash\nCHICKEN WINGS 800 cal\n14.00\ntraditional or chili-lime\nFRENCH FRIES & DIP DUO 600 cal\n8.50\ngarlic aioli | green goddess ranch\nAVOCADO LEMON YOGURT DIP 400 cal\n9.00\nseasoned pita | cucumber | and carrot flatbread\nSKILLET MEATBALLS 600 cal\n11.50\nmarinara | parmesan | arugula | garlic toast\nLOADED TOT-CHOS 800 cal\n10.50\ntater tots | chile | jack cheese | bacon | green goddess & buffalo\nranch | scallions\nCRISPY BRUSSEL SPROUTS 500 cal FULL/HALF 9.00/6.0\nlemon | lemon vinaigrette | parmesan | caesar dressing\n\nGREENS & GRAINS\n\nCAESAR SALAD 300 cal\n10.00\nadd chicken 3.50\nhearts of romaine | croutons | lemon\ncracked black pepper | parmesan | caesar dressing\nMEDITERRANEAN GRAIN BOWL 500 cal\n13.00\nchicken | baby kale | arugula | oven roasted tomatoes\nparmesan | quinoa & brown rice | lemon dressing\n\nBISTRO CLASSICS\n\nLARGE 12\" CHEESE PIZZA\n15.00\nmozzarella cheese | marinara\nLARGE 12\" PEPPERONI PIZZA\n15.00\nmozzarella cheese | marinara | pepperoni\nBISTRO CHEESEBURGER 700 cal\n14.00\nlettuce | tomato | red onion | roasted garlic aioli | tomato\nlettuce | french fries\nBRT SANDWICH 400/720 cal\n12.50\nbacon | romaine | tomato | garlic parmesan spread\ncaesar dressing | french fries\nGREEN GODDESS CHICKEN BLT 600 cal\n12.50\nchicken | bacon | avocado | spinach | pickled red onions\ntomatoes | lettuce | green goddess ranch | artisan bread\nGRILLED CHEESE & TOMATO SOUP 600 cal\n11.00\nwhite cheddar | gruyere | parmesan | scratch made soup\nVEGETABLE BAKED PASTA 600 cal\n12.00\nroasted peppers | broccolini | tomatoes pesto cream sauce |\nparmesan"
+    },
+    {
+      "id": "syn-milestone-00",
+      "restaurant": "Milestone",
+      "question": "How much does the Apple juice cost?",
+      "expected_facts": [
+        "Apple",
+        "160"
+      ],
+      "expected_answer": "160",
+      "category": "price",
+      "source_id": "a2936568-c7e3-4362-997c-ee5280b36cbf",
+      "source_text": "| Bottled Drinking Water | MRP |\n| Aerated water (All Soft Drink) | MRP |\n\n### FRESH JUICES / SODA\n\n| Apple | 160 |\n| Pineapple | 150 |\n| Sweet Lime | 150 |\n| Fresh Lime | 100 |\n| Orange | 160 |\n| Soda Lime / Jaljeera | 110 |\n\n### MOCKTAILS\n\n| Kiwi Classic | 155 |\n| Pink Lady | 155 |\n| Fruit Punch | 170 |\n| Pina Colada | 170 |\n| Mint Mojito | 170 |\n| Blue Lagoon | 155 |\n| Strawberry delight | 160 |\n\n### MILK SHAKES\n\n| Vanilla Milkshake | 165 |\n| Strawberry Milkshake | 165 |\n| Chocolate Milkshake | 165 |\n| Mango Milkshake | 165 |\n| Kesar Pista Milkshake | 175 |\n| Cold Coffee | 150 |\n| Cold Coffee with Ice-cream | 165 |\n\n### HOT SOUPS & SHORBA\n\n| Cream of Tomato Soup | 125 |\n| Cheese Corn Tomato Soup | 145 |\n| Minestrone Soup | 145 |\n| Lemon Coriander Soup | 140 |\n| Cream of Spinach Soup | 140 |\n| Cream of Mushroom Soup | 145 |\n| Sweet Corn (Vegetable or Plain) | 145 |\n| Veg. Clear Soup | 140 |\n| Wonton Veg. Soup | 145 |\n| Hot & Sour Soup | 145 |\n| Veg. Manchow Soup | 155 |\n| Veg. Noodles Soup | 155 |\n| Tom Yom Soup | 165 |\n| Mexican Tortilla | 165 |\n\n### SOUP KE SATH\n\n| Fry Papad | 38 |\n| Roasted Papad | 33 |\n| Masala Papad (Roasted / Fry) | 55 |\n| Jain Masala Papad | 55 |\n| Cheese Masala Papad | 110 |\n\n### CHATS\n\n| Papdi Chat | 150 |\n| Aloo Chat | 140 |\n| Dahi Wada | 150 |\n| Peanut Chat | 160 |"
+    },
+    {
+      "id": "syn-milestone-01",
+      "restaurant": "Milestone",
+      "question": "How much does the Italian Pizza cost?",
+      "expected_facts": [
+        "Italian Pizza",
+        "190"
+      ],
+      "expected_answer": "190",
+      "category": "price",
+      "source_id": "bb186544-9a1e-4ae2-8ae4-8853fd466c94",
+      "source_text": "### SALAD & RAITA\n\n| Waldorf Salad | 180 |\n| Russian Salad | 180 |\n| Fresh Garden Green Salad | 110 |\n| Cucumber Salad | 100 |\n| Tomato Salad | 100 |\n| Jain Salad | 110 |\n| Italian Tossed Salad | 140 |\n| American Corn Salad | 140 |\n| Corn Potato Herbs Salad | 140 |\n| Veg. Raita | 120 |\n| Boondi Raita | 120 |\n| Pineapple Raita | 130 |\n| Anaar Raita | 130 |\n| Fresh Fruit Cut | 180 |\n\n### Starters\n\n### INDIAN STARTERS\n\n| Special Milestone Platter | 370 |\n| Peshawari Paneer Tikka | 240 |\n| Tandoori Paneer Tikka | 240 |\n| Hariyali Paneer Tikka | 250 |\n| Paneer Seekh Kebab | 270 |\n| Veg. Seekh Kebab | 250 |\n| Raja Kebab | 250 |\n| Hara Bhara Kebab | 240 |\n| Shami Kebab | 240 |\n| Tandoori Dhingri Kebab | 270 |\n| Paneer Kalmi Kebab | 270 |\n\n### MEXICAN & THAI STARTER\n\n| Baby Corn Cottage with Pesto Sauce | 250 |\n| Mexican Tikki with Salsa Sauce | 250 |\n| Veg. Nuggets with Mint Mayo Sauce | 230 |\n| Mexican Loaded Cheese Nachos | 215 |\n| Nachos with Salsa | 200 |\n| Mexican Cheesey Enchilada | 265 |\n| Cheese Balls | 230 |\n\n### Continental\n\n### BAKED DISH\n\n| Baked Macaroni Pineapple | 260 |\n| Burmese Spaghetti | 260 |\n| Baked Veg. Lasagna | 275 |\n| Baked Veg. Florentine | 250 |\n| Baked Spaghetti Pineapple | 250 |\n\n### PIZZA\n\n| Italian Pizza | 190 |\n| Mexican Pizza | 195 |\n| Margherita Pizza | 190 |\n| Jain Pizza | 180 |\n| Veg. Pizza | 180 |\n| Double Cheese Pizza | 190 |\n| American Pizza | 210 |\n\n### SIZZLERS\n\n| Special Milestone Sizzler | 410 |\n| Chinese Sizzler | 370 |\n| Paneer Sizzler | 390 |\n| Veg. Sizzler | 350 |"
+    },
+    {
+      "id": "syn-mocha-cafe-00",
+      "restaurant": "Mocha Cafe",
+      "question": "What surcharge applies on public holidays?",
+      "expected_facts": [
+        "*15% public holidays"
+      ],
+      "expected_answer": "15%",
+      "category": "price",
+      "source_id": "a86c74f8-4e6f-4d73-889c-e6825a0b4810",
+      "source_text": "Welcome to Cafe Mocha!\nWhere coastal vibes meet great coffee and exceptional food! Our passionate team of chefs source only the freshest seasonal ingredients balancing a variety of flavours, colours and textures to create your classic Café favourites with a unique and modern twist. We believe there are no shortcuts to quality & make almost everything from scratch, in house. From our toasted maple granola to our sweet potato flat bread and everything in between!\nPlease note that the majority of our dishes can be made gluten free, just ask our friendly staff at the counter, or to advise us of any other dietary requirements.\nFor our vegan menu, please turn to the last page.\nPlease place your orders at the counter.\n*10% surcharge applies Sundays and *15% public holidays."
+    },
+    {
+      "id": "syn-mocha-cafe-01",
+      "restaurant": "Mocha Cafe",
+      "question": "How much does the Karaage chicken ‘Poke’ Bowl cost?",
+      "expected_facts": [
+        "Karaage chicken ‘Poke’ Bowl",
+        "19.90"
+      ],
+      "expected_answer": "19.90",
+      "category": "price",
+      "source_id": "006110dd-8cd5-416e-906c-37652b16f1fc",
+      "source_text": "## lunch.\nKaraage chicken ‘Poke’ Bowl - Crispy fried karaage chicken with brown rice, wakami seaweed salad, mixed leaves, cucumber, apple, daikon, kimchi, kewpie mayo, pickled ginger, coriander 19.90\nCafé Mocha signature asian style Salad - Sticky glazed pork belly, mixed leaves, crushed peanuts, pickled ginger, pickled chilli & fresh herbs. 19.50\nFish tacos (3) - Rocket, cabbage and corn dressed with a smoky paprika mayonnaise, avocado, grilled barramundi topped with chimichurri. 19\nBrisket tacos (3) - Rocket, cabbage and corn dressed with a smoky paprika mayonnaise, avocado, 24hr slow cooked brisket topped with chimichurri and jalapenos. 19.5\nGrilled barramundi - Dukkah crusted barramundi with hommus, fried sweet potato, rocket and citrus salad and native Australian finger limes. 22\nChicken Gyros - Marinated grilled chicken with rocket, fetta, salsa verde, cucumber and tomato served in a pita bread pocket with Moroccan spiced chips 18.5\nSquid salad - Fried salt and pepper squid served with aioli and Greek salad. 19\n\n## burgers.\nAll burgers served with beer battered fries.\nSchnitzel burger - Avocado, lettuce, tomato, bacon & aioli served on a potato bun. 17\nKaraage chicken burger - Karaage chicken with crispy marinated Asian slaw on a potato bun with wasabi mayo and chips. 18\nPulled brisket burger - Smoked pulled brisket with Cajun style slaw served on a soft potato bun with aioli and house Memphis style bbq. 19.5\n\n## sandwiches and wraps.\nOn your choice of bread (white, wholemeal, Turkish, seeded sourdough, soy and linseed gluten free or a wrap)\nSalad - Lettuce, tomato, carrot, cucumber, beetroot, avocado & citrus dressing. 9.5\nRoast Turkey - Camembert, cranberry jam & roquette. 11\nRoast vegetable wrap - Hommus, mixed leaves, beetroot falafels, twice cooked sweet potato, roast mushrooms, pickled cabbage, fetta, avocado, cucumber, tomato and dukkah on a toasted wrap. 17\n\n## toasties.\nCuban sandwich - Double smoked ham with jalapenos, pickles, mustard, pickled cabbage, aioli, cheese, on butter toasted Turkish bread. 17\nChicken and cheese toastie - House smoked chicken, bacon, avocado, tomato, cheese & aioli on Turkish bread. 16\nChilli pork toastie - Ground chilli pork on toasted brioche with kimchi, wasabi mayo, cheese and coriander. 17\nHam cheese toastie - Thick cut double smoked ham, cheese & tomato on Turkish bread. 13\nBLAT- Bacon, lettuce, avocado, tomato & aioli on Turkish bread. 14.50\n\nlunch 11:30 - 2:30"
+    },
+    {
+      "id": "syn-oona-the-one-00",
+      "restaurant": "OONA the One",
+      "question": "How much does the CHILLI MUSTARD FISH cost?",
+      "expected_facts": [
+        "CHILLI MUSTARD FISH",
+        "420"
+      ],
+      "expected_answer": "420",
+      "category": "price",
+      "source_id": "3842de9c-6538-4da5-89d2-0c7a598c2636",
+      "source_text": "| MOUNTAIN CHICKEN | 350 |\n|---|---|\n| Diced chicken tossed in Dalle Khursani red chilli, Sichuan pepper and finished with wine | |\n| SMOKE CHICKEN | 350 |\n| Chicken fingers tossed in salt and pepper style | |\n| KYONG CHILLI CHICKEN | 350 |\n| Diced chicken tossed in sweet chilli sour sauce | |\n| CHILLI CHICKEN KOLKATA STYLE | 350 |\n| Finger Chicken tossed in ginger and garlic and finished with soya | |\n| GAI SAI TAKRAI | 350 |\n| Chicken tossed in dry red, green chilli and lemon leaves | |\n| SLICED CHICKEN CANTONESE | 350 |\n| Sliced chicken served in Cantonese style | |\n| DRUMS OF HEAVEN SHANDUM STYLE | 350 |\n| Chicken drumsticks tossed in chef's special sauce | |\n| CHILLI MUSTARD FISH | 420 |\n| Slice fish tossed in mustard sauce | |"
+    },
+    {
+      "id": "syn-oona-the-one-01",
+      "restaurant": "OONA the One",
+      "question": "How much does the STIR FRIED ASIAN GREENS dish cost?",
+      "expected_facts": [
+        "STIR FRIED ASIAN GREENS",
+        "325"
+      ],
+      "expected_answer": "325",
+      "category": "price",
+      "source_id": "0026cd81-029a-430e-b110-6d3bb078a2c4",
+      "source_text": "| STIR FRIED ASIAN GREENS | 325 |\n|---|---|\n| Exotic veg served in pan Asian style | |\n| CRISPY CONJEE VEG | 325 |\n| Conjee style crispy veg | |\n| SHANGHAI SPRING ROLL | 275 |\n| Tossed veg, Chinese cabbage and pok choi rolled in spring roll sheets | |"
+    },
+    {
+      "id": "syn-punjab-grill-00",
+      "restaurant": "Punjab Grill",
+      "question": "How much does the Boondi Raita cost?",
+      "expected_facts": [
+        "Boondi Raita",
+        "15"
+      ],
+      "expected_answer": "15",
+      "category": "price",
+      "source_id": "da6fbe9d-b833-4883-a5f1-1104a044db62",
+      "source_text": "| Boondi Raita | 15 |\n| Mix Veg Raita | 12 |\n| Plain Papad | 8 |\n| Masala Papad | 12 |\n| Onion Lemon Green Chilli | 8 |"
+    },
+    {
+      "id": "syn-punjab-grill-01",
+      "restaurant": "Punjab Grill",
+      "question": "What year did Punjab grill receive the World Gourmet Summit Award of Excellence for Best Asian Restaurant?",
+      "expected_facts": [
+        "World Gourmet Summit Award of Excellence 2018"
+      ],
+      "expected_answer": "2018",
+      "category": "description",
+      "source_id": "8abe6a44-b6bb-4e69-b0e5-b963e8650329",
+      "source_text": "Punjab grill began its Epicurean journey\nin Singapore in June 2011 and in a short\nspan of time we have firmly established\nourselves as Singapore's Premier Indian\nrestaurant. Our team has garnered\nnumerous accolades and we continue\nour focus to reinvent and rediscover\nIndian food in all new Avatars\nA few of the recognitions bestowed on us include :\n* World Gourmet Summit Award of Excellence 2018 for Best Asian\nRestaurant\n* WGS Award of Excellence for Restaurant Manager of the Year 2018\n* Hospitality Asia Platinum Award for Restaurant of Year 2016\n* Dining City's Public Selection Award\n* Mention in the Michelin Guide 2016\n* Award of Excellence from Peak Magazine's G Awards\n* WGS Asian Cuisine Chef of the Year for 2016 and 2014\n* Trip Advisor Excellence Award every year since our inception\n* Singapore Tattler's Listing of Best Restaurants every year\n* Wine & Dine's List of Top restaurants in Singapore every year\nOur key strength comes from our team of Kitchen and Service staff.\nOur staff work tirelessly to ensure a truly wonderous experience for\nall our guests ."
+    },
+    {
+      "id": "syn-social-00",
+      "restaurant": "Social",
+      "question": "How much does the Peach drink cost?",
+      "expected_facts": [
+        "Peach",
+        "170"
+      ],
+      "expected_answer": "170",
+      "category": "price",
+      "source_id": "367c0d17-1026-40aa-9ea7-86f50a3b2db1",
+      "source_text": "| Peach | 170 |\n| 300ml/76 kcal |\n| Strawberry | 170 |\n| 300ml/72 kcal |\n| Lemon n Lime | 170 |\n| 300ml/31 kcal |"
+    },
+    {
+      "id": "syn-social-01",
+      "restaurant": "Social",
+      "question": "How much does the Paneer Makhani Biryani cost?",
+      "expected_facts": [
+        "Paneer Makhani Biryani",
+        "425"
+      ],
+      "expected_answer": "425",
+      "category": "price",
+      "source_id": "ecac3bf4-7fd3-416b-abbe-7d1c7cc9d7b5",
+      "source_text": "| Item | Price |\n|---|---|\n| Paneer Makhani Biryani A Flavourful Combination of Paneer Makhani, Nuts & Fragrant Saffron Rice. Served with Raita & Fryums | 425 |\n| Butter Chicken Biryani A Flavourful Combination of Chicken Makhani, Nuts & Fragrant Saffron Rice. Served with Raita & Fryums | 450 |\n| Bhuna Gosht Biryani A flavourful biryani, layered with bhuna gosht. Served with Raita & Fryums | 495 |"
+    },
+    {
+      "id": "syn-taj-00",
+      "restaurant": "Taj",
+      "question": "How much does the Chestnut and potato crepes cost?",
+      "expected_facts": [
+        "Chestnut and potato crepes",
+        "750"
+      ],
+      "expected_answer": "750",
+      "category": "price",
+      "source_id": "3b65aab4-3215-490f-a749-11ed3fe8ba39",
+      "source_text": "| Chestnut and potato crepes | 750 |\n| savoury crepes, fondue of chestnut and jalapeño, saffron sauce, mixed greens | |\n| Artishawki batata meshwi | 750 |\n| artichoke stuffed potatoes, iranian almond pilaf, cream and dried chilli sauce | |\n| Tagine | 750 |\n| moroccan tomato and ginger stew, chermoula couscous | |\n| Vegetables | 750 |\n| Lamb shanks | 1050 |\n| Chilean sea bass | 2600 |\n| Caper gremolata, pearl barley, preserved tomato, sweet corn puree | |\n| Oven roasted New Zealand lamb rack | 1550 |\n| black eyed bean cassoulet, root vegetables | |\n| Roasted Norwegian salmon | 1150 |\n| creamed soft polenta, caponata, sauce vierge | |\n| Grilled tenderloin Fillet | 1050 |\n| potato and parsley dumplings, butter poached vegetables, red wine jus | |\n| Fish n' chips | 950 |\n| batter fried fish, tartare sauce, french fries | |\n| Slow roasted chicken | 850 |\n| mushroom ragout, spinach, shallot jus |"
+    },
+    {
+      "id": "syn-taj-01",
+      "restaurant": "Taj",
+      "question": "What time are tandoor baked specialties available?",
+      "expected_facts": [
+        "12 noon to 3 pm",
+        "7:30 pm to 12 midnight"
+      ],
+      "expected_answer": "12 noon to 3 pm and 7:30 pm to 12 midnight",
+      "category": "hours",
+      "source_id": "f0f38ba5-13c3-4f32-92e7-4a2c76ebac88",
+      "source_text": "All Indian curries are served with Indian breads or rice, tandoor baked specialties are only available from 12 noon to 3 pm and from 7:30 pm to 12 midnight."
+    },
+    {
+      "id": "syn-waterside-landmark-00",
+      "restaurant": "Waterside Landmark",
+      "question": "How much does the HYDERABADI MUTTON HALEEM cost?",
+      "expected_facts": [
+        "HYDERABADI MUTTON HALEEM",
+        "1500"
+      ],
+      "expected_answer": "1500",
+      "category": "price",
+      "source_id": "d1f289bf-5fe3-48a6-ad5e-a95dc67330cb",
+      "source_text": "HYDERABADI MUTTON HALEEM\n1500\nRich, hearty & spiced slow cooked blend of meat,\nlentils & wheat\nBIRYANI & RICE"
+    },
+    {
+      "id": "syn-waterside-landmark-01",
+      "restaurant": "Waterside Landmark",
+      "question": "How much does the HARA-BHARA dish cost?",
+      "expected_facts": [
+        "HARA-BHARA",
+        "600"
+      ],
+      "expected_answer": "600",
+      "category": "price",
+      "source_id": "fcb88d54-0987-46f6-a212-35199bf88cf7",
+      "source_text": "| HARA-BHARA | 600 |\n| Minced peas patty with nuts & cheese, spices cooked on hot plate |\n| ALOO ANGARA | 600 |\n| Mawa stuffed tandoori aloo topped with cream cheese & Indian salsa |\n| TRUFFLE MUSHROOM GALOUTI | 650 |\n| Silky smooth mushroom blended with aromatic spices, and the luxurious essence of truffle oil infused |\n| AWADHI PANEER TIKKA | 650 |\n| Cottage cheese marinade in hung curd, Kashmiri chili, & Awadhi spices |\n| TANDOORI MALAI BROCCOLI | 650 |\n| Cheese cashew paste charred broccoli topped with cream cheese |\n| GOLDEN CURRY PANEER TIKKA | 700 |\n| Kasuri infused paneer tikka served on bed of crispy naan and golden curry on top |\n| HYDERABADI TANGRI KEBAB | 750 |\n| Chicken drumsticks are marinade in a blend of yogurt, fresh herbs paste & the iconic Hyderabadi masala |\n| TANDOORI MURGH TIKKA | 750 |\n| Chicken marinade in peshawari spices, cooked in clay oven |"
+    },
+    {
+      "id": "syn-coral---kaffberyy-00",
+      "restaurant": "coral - kaffberyy",
+      "question": "How much does Jeera Rice cost?",
+      "expected_facts": [
+        "JEERA RICE",
+        "265"
+      ],
+      "expected_answer": "265",
+      "category": "price",
+      "source_id": "dcdd4df6-995f-478c-a184-046942d715bf",
+      "source_text": "| STEAM RICE | 255 |\n| JEERA RICE | 265 |"
+    },
+    {
+      "id": "syn-coral---kaffberyy-01",
+      "restaurant": "coral - kaffberyy",
+      "question": "How much does the ASPARAGUS TEMPURA ROLL cost for 4 pieces?",
+      "expected_facts": [
+        "ASPARAGUS TEMPURA ROLL",
+        "375"
+      ],
+      "expected_answer": "375",
+      "category": "price",
+      "source_id": "928003e6-2f3c-45bc-b5b4-f3425a95f3a4",
+      "source_text": "| ASPARAGUS TEMPURA ROLL (4PC / 8PC) | 375 / 650 |\n| Tempura fried asparagus rolls served with chikri kikoman |\n| SPICY AVOCADO ROLL (4PC / 8PC) | 375 / 650 |\n| Sliced avocado spicy mayo on top served with chikri soya |\n| ROCK CORN TEMPURA ROLL (4PC / 8PC) | 375 / 650 |\n| Tempura fried babycorn, eggplant served with chikri kikokam |"
+    }
+  ]
+}

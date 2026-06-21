@@ -1,0 +1,251 @@
+# Hand-authored gold questions for MenuMind retrieval eval.
+# Every fact here was verified against the parsed menus in parse_output/.
+#
+# Fields:
+#   id              unique slug
+#   restaurant      exact payload value (scopes retrieval, as the app does)
+#   question        what a user would actually ask
+#   expected_facts  strings that MUST appear (normalized) in an answer-bearing
+#                   chunk -> drives Hit@k / MRR / context-recall
+#   expected_answer short ground-truth answer -> drives the correctness judge
+#   category        price | description | hours | dietary | contact | availability | absent
+#
+# category: absent  -> the answer is NOT in the menu; retrieval metrics are
+#                      skipped and the judge checks the model correctly declines.
+
+# ---------------- Mocha Cafe ----------------
+- id: mocha-cappuccino-large
+  restaurant: Mocha Cafe
+  question: How much is a large cappuccino at Cafe Mocha?
+  expected_facts: [Cappuccino]
+  expected_answer: "$4.60 for a large (large/L)."
+  category: price
+
+- id: mocha-blat-desc
+  restaurant: Mocha Cafe
+  question: What's in the BLAT?
+  expected_facts: [BLAT]
+  expected_answer: "Bacon, lettuce, avocado, tomato and aioli on Turkish bread."
+  category: description
+
+- id: mocha-vegan
+  restaurant: Mocha Cafe
+  question: Do you have any vegan dishes?
+  expected_facts: [Vegan]
+  expected_answer: "Yes - there's a vegan breakfast and vegan lunch section (acai bowl, nourish bowl, wraps, etc.)."
+  category: dietary
+
+- id: mocha-breakfast-hours
+  restaurant: Mocha Cafe
+  question: What time is breakfast served?
+  expected_facts: ["breakfast 7"]
+  expected_answer: "Breakfast is 7 - 11:30."
+  category: hours
+
+- id: mocha-truffle-fries
+  restaurant: Mocha Cafe
+  question: How much are the truffle parmesan fries?
+  expected_facts: [Truffle parmesan fries]
+  expected_answer: "$12."
+  category: price
+
+- id: mocha-sushi-absent
+  restaurant: Mocha Cafe
+  question: Do you serve sushi?
+  expected_facts: []
+  expected_answer: "No - sushi is not on the menu; the model should say so rather than invent it."
+  category: absent
+
+# ---------------- Marriott (Courtyard Anaheim) ----------------
+- id: marriott-dinner-hours
+  restaurant: Marriott
+  question: What time does dinner start?
+  expected_facts: [DINNER, "5 00"]
+  expected_answer: "Dinner is 5:00PM - 11:00PM."
+  category: hours
+
+- id: marriott-bistro-cheeseburger
+  restaurant: Marriott
+  question: How much is the bistro cheeseburger?
+  expected_facts: [BISTRO CHEESEBURGER]
+  expected_answer: "$14.00."
+  category: price
+
+- id: marriott-phone
+  restaurant: Marriott
+  question: What's the hotel phone number?
+  expected_facts: ["254 1442"]
+  expected_answer: "(714) 254-1442."
+  category: contact
+
+- id: marriott-kids-cheeseburger
+  restaurant: Marriott
+  question: How much is the kids cheeseburger?
+  expected_facts: [KIDS CHEESEBURGER]
+  expected_answer: "$6.50."
+  category: price
+
+- id: marriott-cocktails
+  restaurant: Marriott
+  question: What cocktails do you have?
+  expected_facts: [COCKTAILS]
+  expected_answer: "Old Fashioned, Mai Tai, Cosmopolitan, Jalapeno Pineapple Margarita, Margarita - all $14."
+  category: availability
+
+- id: marriott-grain-bowl
+  restaurant: Marriott
+  question: How much is the Mediterranean grain bowl?
+  expected_facts: [MEDITERRANEAN GRAIN BOWL]
+  expected_answer: "$13.00."
+  category: price
+
+# ---------------- Punjab Grill ----------------
+- id: punjab-butter-chicken
+  restaurant: Punjab Grill
+  question: How much is the butter chicken?
+  expected_facts: [Butter Chicken]
+  expected_answer: "Punjab Grill Butter Chicken is 50."
+  category: price
+
+- id: punjab-dal-makhani-desc
+  restaurant: Punjab Grill
+  question: What is in the Dal Makhani?
+  expected_facts: [Dal Makhani]
+  expected_answer: "Whole urad dal and kidney beans simmered overnight with tomato puree, cream, Indian spices and clarified butter."
+  category: description
+
+- id: punjab-mango-lassi
+  restaurant: Punjab Grill
+  question: Price of a mango lassi?
+  expected_facts: [Mango Lassi]
+  expected_answer: "14."
+  category: price
+
+- id: punjab-garlic-naan
+  restaurant: Punjab Grill
+  question: How much is garlic naan?
+  expected_facts: [Garlic Naan]
+  expected_answer: "14."
+  category: price
+
+- id: punjab-service-charge
+  restaurant: Punjab Grill
+  question: Is there a service charge?
+  expected_facts: ["10", service charge]
+  expected_answer: "Yes - a 10% service charge, plus taxes as applicable."
+  category: description
+
+- id: punjab-veg-kebabs
+  restaurant: Punjab Grill
+  question: Do you have vegetarian kebabs?
+  expected_facts: [Paneer Tikka]
+  expected_answer: "Yes - veg barbeque kebabs like Achaari Olives Paneer Tikka, Tandoori Soya Chop, Malaai Broccoli, etc."
+  category: dietary
+
+- id: punjab-lamb-chop
+  restaurant: Punjab Grill
+  question: How much is the tandoori lamb chop?
+  expected_facts: [Tandoori Lamb Chop]
+  expected_answer: "60."
+  category: price
+
+# ---------------- Milestone ----------------
+- id: milestone-sizzler
+  restaurant: Milestone
+  question: How much is the special Milestone sizzler?
+  expected_facts: [Special Milestone Sizzler]
+  expected_answer: "410."
+  category: price
+
+- id: milestone-dinner-hours
+  restaurant: Milestone
+  question: What are the dinner timings?
+  expected_facts: [Dinner, "6 30"]
+  expected_answer: "Dinner: 6.30 p.m. to 11.00 p.m."
+  category: hours
+
+- id: milestone-margherita
+  restaurant: Milestone
+  question: Price of a margherita pizza?
+  expected_facts: [Margherita Pizza]
+  expected_answer: "190."
+  category: price
+
+- id: milestone-mango-shake
+  restaurant: Milestone
+  question: How much is a mango milkshake?
+  expected_facts: [Mango Milkshake]
+  expected_answer: "165."
+  category: price
+
+- id: milestone-jain
+  restaurant: Milestone
+  question: Do you have Jain food?
+  expected_facts: [Jain]
+  expected_answer: "Yes - Jain food is available (e.g. Jain Salad, Jain Pizza, Jain Kofta, Jain Masala Papad)."
+  category: dietary
+
+- id: milestone-dal-tadka
+  restaurant: Milestone
+  question: How much is dal tadka?
+  expected_facts: [Dal Tadka]
+  expected_answer: "200."
+  category: price
+
+# ---------------- OONA the One ----------------
+- id: oona-paneer-makhani
+  restaurant: OONA the One
+  question: How much is the paneer makhani?
+  expected_facts: [PANEER MAKHANI]
+  expected_answer: "340."
+  category: price
+
+- id: oona-service-charge
+  restaurant: OONA the One
+  question: What service charge do you add?
+  expected_facts: ["5", Service Charge]
+  expected_answer: "A 5% service charge plus government taxes as applicable."
+  category: description
+
+- id: oona-tandoori-chicken
+  restaurant: OONA the One
+  question: How much is the tandoori chicken?
+  expected_facts: [TANDOORI CHICKEN]
+  expected_answer: "350 half / 600 full."
+  category: price
+
+- id: oona-big-platter
+  restaurant: OONA the One
+  question: What's the price of the OONA big platter (veg)?
+  expected_facts: [OONA BIG PLATTER]
+  expected_answer: "645 for the veg platter (665 for non-veg)."
+  category: price
+
+# ---------------- Taj (The Mynt) ----------------
+- id: taj-allergens
+  restaurant: Taj
+  question: What common food allergens do you list?
+  expected_facts: [Peanut]
+  expected_answer: "Milk, egg, peanut, tree nut, fish, shellfish, soy, gluten, sesame, celery, mustard, MSG, sulphur dioxide, etc."
+  category: description
+
+- id: taj-greek-salad
+  restaurant: Taj
+  question: How much is the Greek salad?
+  expected_facts: [Greek salad]
+  expected_answer: "600."
+  category: price
+
+- id: taj-mulligatawny
+  restaurant: Taj
+  question: Price of the Mulligatawny soup?
+  expected_facts: [Mulligatawny]
+  expected_answer: "400."
+  category: price
+
+- id: taj-transfat
+  restaurant: Taj
+  question: Are your menus trans-fat free?
+  expected_facts: [trans-fat free]
+  expected_answer: "Yes - all menus are trans-fat free."
+  category: dietary
