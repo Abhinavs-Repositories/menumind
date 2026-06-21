@@ -1,22 +1,18 @@
-import { useCallback, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 
 import { getIngestStatus, uploadMenu, type PickedFile } from '@/lib/api';
+import { AppText, Button, Screen, haptics } from '@/components/ui';
+import { useTheme, type Theme } from '@/theme';
 
 type Phase = 'idle' | 'uploading' | 'processing' | 'done' | 'error';
 
 export default function AddMenuScreen() {
   const router = useRouter();
+  const t = useTheme();
+  const styles = useMemo(() => makeStyles(t), [t]);
   const [name, setName] = useState('');
   const [file, setFile] = useState<PickedFile | null>(null);
   const [phase, setPhase] = useState<Phase>('idle');
@@ -33,31 +29,30 @@ export default function AddMenuScreen() {
     const a = result.assets[0];
     setFile({ uri: a.uri, name: a.name, mimeType: a.mimeType });
     setMessage(null);
+    haptics.tap();
   }, []);
 
-  const poll = useCallback(
-    (jobId: string) => {
-      getIngestStatus(jobId)
-        .then((s) => {
-          if (s.status === 'done') {
-            setPhase('done');
-            setMessage(
-              `Ingested ${s.chunks ?? 0} items from ${s.pages ?? 0} page(s).`,
-            );
-          } else if (s.status === 'error') {
-            setPhase('error');
-            setMessage(s.error ?? 'Ingestion failed.');
-          } else {
-            pollRef.current = setTimeout(() => poll(jobId), 2000);
-          }
-        })
-        .catch((e) => {
+  const poll = useCallback((jobId: string) => {
+    getIngestStatus(jobId)
+      .then((s) => {
+        if (s.status === 'done') {
+          setPhase('done');
+          setMessage(`Ingested ${s.chunks ?? 0} items from ${s.pages ?? 0} page(s).`);
+          haptics.success();
+        } else if (s.status === 'error') {
           setPhase('error');
-          setMessage(e instanceof Error ? e.message : 'Status check failed');
-        });
-    },
-    [],
-  );
+          setMessage(s.error ?? 'Ingestion failed.');
+          haptics.error();
+        } else {
+          pollRef.current = setTimeout(() => poll(jobId), 2000);
+        }
+      })
+      .catch((e) => {
+        setPhase('error');
+        setMessage(e instanceof Error ? e.message : 'Status check failed');
+        haptics.error();
+      });
+  }, []);
 
   const submit = useCallback(async () => {
     const restaurant = name.trim();
@@ -73,114 +68,112 @@ export default function AddMenuScreen() {
     } catch (e) {
       setPhase('error');
       setMessage(e instanceof Error ? e.message : 'Upload failed');
+      haptics.error();
     }
   }, [name, file, phase, poll]);
 
   const busy = phase === 'uploading' || phase === 'processing';
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.body}>
-        <Text style={styles.label}>Restaurant name</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Blue Tokai"
-          placeholderTextColor="#a89e98"
-          editable={!busy}
+    <Screen style={styles.body}>
+      <AppText variant="label" style={styles.label}>
+        Restaurant name
+      </AppText>
+      <TextInput
+        style={styles.input}
+        value={name}
+        onChangeText={setName}
+        placeholder="e.g. Blue Tokai"
+        placeholderTextColor={t.colors.placeholder}
+        editable={!busy}
+      />
+
+      <AppText variant="label" style={styles.label}>
+        Menu file (PDF or image)
+      </AppText>
+      <Pressable
+        style={({ pressed }) => [
+          styles.dropZone,
+          file && styles.dropZoneActive,
+          (busy || pressed) && styles.dim,
+        ]}
+        onPress={pick}
+        disabled={busy}
+      >
+        <AppText style={styles.dropIcon}>{file ? '📄' : '⬆️'}</AppText>
+        <AppText variant={file ? 'heading' : 'muted'} center numberOfLines={1}>
+          {file ? file.name : 'Choose a file…'}
+        </AppText>
+        {!file && (
+          <AppText variant="caption" center>
+            PDF or image of the menu
+          </AppText>
+        )}
+      </Pressable>
+
+      {phase === 'done' ? (
+        <View style={styles.resultOk}>
+          <AppText variant="heading" color={t.colors.success}>
+            ✅ {message}
+          </AppText>
+          <Button title="Back to menus" onPress={() => router.replace('/')} style={styles.cta} />
+        </View>
+      ) : (
+        <Button
+          title="Upload & ingest"
+          loadingTitle={phase === 'uploading' ? 'Uploading…' : 'Reading menu…'}
+          loading={busy}
+          disabled={!name.trim() || !file}
+          onPress={submit}
+          style={styles.cta}
         />
+      )}
 
-        <Text style={styles.label}>Menu file (PDF or image)</Text>
-        <Pressable
-          style={[styles.fileBtn, busy && styles.disabled]}
-          onPress={pick}
-          disabled={busy}
-        >
-          <Text style={styles.fileBtnText} numberOfLines={1}>
-            {file ? file.name : 'Choose a file…'}
-          </Text>
-        </Pressable>
-
-        {phase === 'done' ? (
-          <View style={styles.resultOk}>
-            <Text style={styles.resultOkText}>✅ {message}</Text>
-            <Pressable
-              style={styles.primaryBtn}
-              onPress={() => router.replace('/')}
-            >
-              <Text style={styles.primaryBtnText}>Back to menus</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            style={[
-              styles.primaryBtn,
-              (!name.trim() || !file || busy) && styles.disabled,
-            ]}
-            onPress={submit}
-            disabled={!name.trim() || !file || busy}
-          >
-            {busy ? (
-              <View style={styles.row}>
-                <ActivityIndicator color="#fff" />
-                <Text style={styles.primaryBtnText}>
-                  {phase === 'uploading' ? 'Uploading…' : 'Reading menu…'}
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.primaryBtnText}>Upload &amp; ingest</Text>
-            )}
-          </Pressable>
-        )}
-
-        {phase === 'processing' && (
-          <Text style={styles.hint}>
-            Parsing the menu with AI and embedding it — this can take up to a
-            minute for multi-page PDFs.
-          </Text>
-        )}
-        {phase === 'error' && <Text style={styles.error}>⚠️ {message}</Text>}
-      </View>
-    </SafeAreaView>
+      {phase === 'processing' && (
+        <AppText variant="muted" style={styles.hint}>
+          Parsing the menu with AI and embedding it — this can take up to a minute
+          for multi-page PDFs.
+        </AppText>
+      )}
+      {phase === 'error' && (
+        <AppText variant="heading" color={t.colors.brand} style={styles.hint}>
+          ⚠️ {message}
+        </AppText>
+      )}
+    </Screen>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf7f5' },
-  body: { padding: 20, gap: 10 },
-  label: { fontSize: 14, color: '#7a6f6a', marginTop: 10, fontWeight: '600' },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#2c2420',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e4dcd7',
-  },
-  fileBtn: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e4dcd7',
-  },
-  fileBtnText: { fontSize: 16, color: '#2c2420' },
-  primaryBtn: {
-    backgroundColor: '#c0392b',
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  primaryBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  disabled: { opacity: 0.5 },
-  hint: { color: '#7a6f6a', fontSize: 13, marginTop: 12, lineHeight: 19 },
-  error: { color: '#c0392b', fontSize: 14, marginTop: 12, fontWeight: '600' },
-  resultOk: { gap: 4 },
-  resultOkText: { color: '#1e7a46', fontSize: 15, fontWeight: '600', marginTop: 12 },
-});
+function makeStyles(t: Theme) {
+  return StyleSheet.create({
+    body: { padding: 20, gap: 10 },
+    label: { marginTop: 10 },
+    input: {
+      backgroundColor: t.colors.surface,
+      borderRadius: t.radius.md,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: t.fontSize.lg,
+      color: t.colors.text,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: t.colors.border,
+    },
+    dropZone: {
+      backgroundColor: t.colors.surface,
+      borderRadius: t.radius.lg,
+      paddingVertical: 28,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+      gap: 6,
+      borderWidth: 1.5,
+      borderStyle: 'dashed',
+      borderColor: t.colors.border,
+    },
+    dropZoneActive: { borderColor: t.colors.brand, borderStyle: 'solid' },
+    dropIcon: { fontSize: 28 },
+    dim: { opacity: 0.6 },
+    cta: { marginTop: 16 },
+    resultOk: { gap: 4, marginTop: 12 },
+    hint: { marginTop: 12, lineHeight: 19 },
+  });
+}

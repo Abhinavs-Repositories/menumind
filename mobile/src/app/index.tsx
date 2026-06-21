@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Stack, useFocusEffect, useRouter } from 'expo-router';
 
 import { fetchMenus } from '@/lib/api';
+import { AppText, Button, Card, Screen } from '@/components/ui';
+import { useTheme } from '@/theme';
 
 export default function MenusScreen() {
   const router = useRouter();
+  const t = useTheme();
   const [menus, setMenus] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -65,38 +60,42 @@ export default function MenusScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#c0392b" />
-      </View>
+      <Screen style={styles.centered} edges={['bottom']}>
+        <ActivityIndicator size="large" color={t.colors.brand} />
+      </Screen>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-        <Text style={styles.errorHint}>
+      <Screen style={styles.centered}>
+        <AppText variant="heading" color={t.colors.brand} center>
+          {error}
+        </AppText>
+        <AppText variant="muted" center style={styles.gap}>
           Is the backend running and EXPO_PUBLIC_API_URL set correctly?
-        </Text>
-        <Pressable style={styles.retry} onPress={load}>
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
-      </View>
+        </AppText>
+        <Button title="Retry" onPress={load} full={false} style={styles.retry} />
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <Screen>
       <Stack.Screen
         options={{
           headerRight: () => (
             <Pressable onPress={() => router.push('/add-menu')} hitSlop={8}>
-              <Text style={styles.addBtn}>＋ Add</Text>
+              <AppText variant="heading" color={t.colors.brand} style={styles.addBtn}>
+                ＋ Add
+              </AppText>
             </Pressable>
           ),
         }}
       />
-      <Text style={styles.subtitle}>Pick a menu to start chatting</Text>
+      <AppText variant="muted" style={styles.subtitle}>
+        Pick a menu to start chatting
+      </AppText>
       <FlatList
         data={menus}
         keyExtractor={(item) => item}
@@ -105,68 +104,68 @@ export default function MenusScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#c0392b"
+            tintColor={t.colors.brand}
           />
         }
-        renderItem={({ item }) => (
-          <Pressable
-            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-            onPress={() =>
-              router.push({ pathname: '/chat', params: { restaurant: item } })
-            }
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <AppText variant="title" center>
+              No menus yet
+            </AppText>
+            <AppText variant="muted" center style={styles.gap}>
+              Add a restaurant menu and start asking about dishes, prices and
+              dietary options.
+            </AppText>
+            <Button
+              title="＋ Add a menu"
+              onPress={() => router.push('/add-menu')}
+              full={false}
+              style={styles.retry}
+            />
+          </View>
+        }
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 45).duration(260)}>
+          <Card
+            onPress={() => router.push({ pathname: '/chat', params: { restaurant: item } })}
+            style={styles.card}
           >
-            <Text style={styles.cardTitle}>{item}</Text>
-            <Text style={styles.chevron}>›</Text>
-          </Pressable>
+            <View style={[styles.monogram, { backgroundColor: t.colors.brandTint }]}>
+              <AppText variant="title" color={t.colors.brand}>
+                {item.charAt(0).toUpperCase()}
+              </AppText>
+            </View>
+            <View style={styles.cardBody}>
+              <AppText variant="heading" numberOfLines={1}>
+                {item}
+              </AppText>
+              <AppText variant="caption">Tap to ask about the menu</AppText>
+            </View>
+            <AppText style={[styles.chevron, { color: t.colors.brand }]}>›</AppText>
+          </Card>
+          </Animated.View>
         )}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf7f5' },
-  centered: {
-    flex: 1,
+  centered: { alignItems: 'center', justifyContent: 'center', padding: 24 },
+  subtitle: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+  list: { padding: 16, gap: 12, flexGrow: 1 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  monogram: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#faf7f5',
   },
-  subtitle: {
-    fontSize: 15,
-    color: '#7a6f6a',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  list: { padding: 16, gap: 12 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  cardPressed: { backgroundColor: '#f1eae7' },
-  cardTitle: { fontSize: 18, fontWeight: '600', color: '#2c2420' },
-  addBtn: { color: '#c0392b', fontWeight: '700', fontSize: 16 },
-  chevron: { fontSize: 26, color: '#c0392b', fontWeight: '300' },
-  errorText: { fontSize: 16, color: '#c0392b', textAlign: 'center', fontWeight: '600' },
-  errorHint: { fontSize: 13, color: '#7a6f6a', textAlign: 'center', marginTop: 8 },
-  retry: {
-    marginTop: 20,
-    backgroundColor: '#c0392b',
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  retryText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  cardBody: { flex: 1, gap: 2 },
+  chevron: { fontSize: 26, fontWeight: '300' },
+  addBtn: { fontSize: 16 },
+  gap: { marginTop: 8 },
+  retry: { marginTop: 20, paddingHorizontal: 28 },
+  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, marginTop: 40 },
 });

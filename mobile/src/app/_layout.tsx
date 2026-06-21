@@ -1,22 +1,44 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
-export default function RootLayout() {
+import { ThemeProvider, useTheme } from '@/theme';
+
+function Navigator() {
+  const t = useTheme();
   return (
-    <KeyboardProvider>
-      <StatusBar style="dark" />
+    <>
+      <StatusBar style={t.mode === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
-          headerStyle: { backgroundColor: '#fff' },
-          headerTitleStyle: { fontWeight: '700' },
-          headerTintColor: '#c0392b',
+          headerStyle: { backgroundColor: t.colors.surface },
+          headerTitleStyle: {
+            fontFamily: t.fonts.display,
+            fontWeight: '700',
+            color: t.colors.text,
+          },
+          headerTintColor: t.colors.brand,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: t.colors.bg },
         }}
       >
         <Stack.Screen name="index" options={{ title: 'MenuMind' }} />
         <Stack.Screen name="chat" options={{ title: 'Chat' }} />
         <Stack.Screen name="add-menu" options={{ title: 'Add a menu' }} />
       </Stack>
-    </KeyboardProvider>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <KeyboardProvider>
+        <ThemeProvider>
+          <Navigator />
+        </ThemeProvider>
+      </KeyboardProvider>
+    </GestureHandlerRootView>
   );
 }
